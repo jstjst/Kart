@@ -20,48 +20,47 @@
 #define S_LED_4 PB7
 
 //Drehzahlanzeige
-const byte drehzahl[9] = {
-  B00000000,
-  B00000001,
-  B00000011,
-  B00000111,
-  B00001111,
-  B00011111,
-  B00111111,
-  B01111111,
-  B11111111
+const word drehzahl[16] = {
+  0b0000000000000000,
+  0b0000000000000001,
+  0b0000000000000011,
+  0b0000000000000111,
+  0b0000000000001111,
+  0b0000000000011111,
+  0b0000000000111111,
+  0b0000000001111111,
+  0b0000000011111111,
+  0b0000000111111111,
+  0b0000001111111111,
+  0b0000011111111111,
+  0b0000111111111111,
+  0b0001111111111111,
+  0b0011111111111111,
+  0b0111111111111111
 };
 
 //Warnung
-const byte warnung[2] = {
-  B10101010,
-  B01010101
+const word warnung[2] = {
+  0b0101010101010101,
+  0b0010101010101010
 };
 
-//D,N,R,P  Port C   ABNCPRDE              Port D   FGTSUHKM
-const byte d_pc = {B11010011}; const byte d_pd = {B10010001};
-const byte n_pc = {B00010110}; const byte n_pd = {B01000110};
-const byte r_pc = {B11011100}; const byte r_pd = {B01001100};
-const byte p_pc = {B11011000}; const byte p_pd = {B01001100};
+//D,N,R,P        FGTSUHKMABNCPRDE
+const byte d = 0b1001000111010011;
+const byte n = 0b0100011000010110;
+const byte r = 0b0100110011011100;
+const byte p = 0b0100110011011000;
 
-//Gang Port C
-const byte gang_pc[5] = {
-  //ABNCPRDE
-  B00110010,   //1
-  B11011001,   //2
-  B11011011,   //3
-  B00011010,   //4
-  B11011011    //5
+//Gang
+const word gang[5] = {
+  //FGTSUHKMABNCPRDE
+  0b0000000000110010,   //1
+  0b1100100011011001,   //2
+  0b1000000011011011,   //3
+  0b0000110000011010,   //4
+  0b1000110011011011    //5
 };
-//Gang Port D
-const byte gang_pd[5] = {
-  //FGTSUHKM
-  B00000000,   //1
-  B11001000,   //2
-  B10000000,   //3
-  B00001100,   //4
-  B10001100    //5
-};
+
 
 void setup()
 {
@@ -78,7 +77,7 @@ void setup()
 SIGNAL(TIMER0_COMPA_vect)
 {
   unsigned long currentMillis = millis();
-  led(currentMillis, , , , );   //LED Multiplexing
+  led(currentMillis, , );   //LED Multiplexing
 }
 
 //Initialisierung Ein-/Ausgaenge
@@ -147,29 +146,29 @@ void shift(volatile uint8_t *port, int j, int ms)
   }
 }
 
-void led(unsigned long currentMillis, byte dzb_c, byte dzb_d, byte seg_c, byte seg_d)
+void led(unsigned long currentMillis, word dzb, word seg)
 {
   static unsigned long lastUpdate;
   static bool state;   //SEG = 0  DZB = 1
 
   //Wechsel zwischen SEG und DZB ueber state
-  if (state == 0 && (currentMillis - lastUpdate) > updateInterval)        //Zeit fuer Update
+  if (state == 0 && (currentMillis - lastUpdate) > updateInterval)        //Zeit fuer Update  SEG
   {
     lastUpdate = currentMillis;
     state = 1;
     digitalWrite(DZB, LOW);
     digitalWrite(SEG, HIGH);
-    PORTC = seg_c;
-    PORTD = seg_d;
+    PORTC = lowByte(seg);
+    PORTD = highByte(seg);
   }
-  else if (state == 1 && (currentMillis - lastUpdate) > updateInterval)   //Zeit fuer Update
+  else if (state == 1 && (currentMillis - lastUpdate) > updateInterval)   //Zeit fuer Update  DZB
   {
     lastUpdate = currentMillis;
     state = 0;
     digitalWrite(SEG, LOW);
     digitalWrite(DZB, HIGH);
-    PORTC = dzb_c;
-    PORTD = dzb_d;
+    PORTC = lowByte(dzb);
+    PORTD = highByte(dzb);
   }
 }
 
