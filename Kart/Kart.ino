@@ -47,31 +47,26 @@ const byte p_pc = {B11011000}; const byte p_pd = {B01001100};
 //Gang Port C
 const byte gang_pc[5] = {
   //ABNCPRDE
-   B00110010,   //1
-   B11011001,   //2
-   B11011011,   //3
-   B00011010,   //4
-   B11011011    //5
+  B00110010,   //1
+  B11011001,   //2
+  B11011011,   //3
+  B00011010,   //4
+  B11011011    //5
 };
 //Gang Port D
 const byte gang_pd[5] = {
   //FGTSUHKM
-   B00000000,   //1
-   B11001000,   //2
-   B10000000,   //3
-   B00001100,   //4
-   B10001100    //5
+  B00000000,   //1
+  B11001000,   //2
+  B10000000,   //3
+  B00001100,   //4
+  B10001100    //5
 };
 
 void setup()
 {
-  //LED Ports (C,D) als Ausgang setzen
-  DDRC = B11111111;
-  DDRD = B11111111;
-
-  pinMode(NSL, OUTPUT);
-  pinMode(DZB, OUTPUT);
-  pinMode(SEG, OUTPUT);
+  init_IO();
+  start();
 
   //Interrupt Einstellung
   OCR0 = 0xAF;
@@ -86,6 +81,71 @@ SIGNAL(TIMER0_COMPA_vect)
   led(currentMillis, , , , );   //LED Multiplexing
 }
 
+//Initialisierung Ein-/Ausgaenge
+void init_IO()
+{
+  //LED Ports (C,D) als Ausgang setzen
+  DDRC = B11111111;
+  DDRD = B11111111;
+  PORTC = B00000000;
+  PORTD = B00000000;
+
+  //Transistor fuer Nebelschlussleuchte
+  pinMode(NSL, OUTPUT);
+  digitalWrite(NSL, LOW);
+
+  //Transistoren fuer LED Ansteuerung
+  pinMode(DZB, OUTPUT);
+  pinMode(SEG, OUTPUT);
+  digitalWrite(DZB, LOW);
+  digitalWrite(SEG, LOW);
+
+  //Status-LEDs
+  pinMode(S_LED_1, OUTPUT);
+  pinMode(S_LED_2, OUTPUT);
+  pinMode(S_LED_3, OUTPUT);
+  pinMode(S_LED_4, OUTPUT);
+  digitalWrite(S_LED_1, HIGH);
+  digitalWrite(S_LED_2, HIGH);
+  digitalWrite(S_LED_3, HIGH);
+  digitalWrite(S_LED_4, HIGH);
+}
+
+//Startbild
+void start()
+{
+  //Status-LEDs
+  digitalWrite(S_LED_1, LOW);   delay(100);   digitalWrite(S_LED_1, HIGH);
+  digitalWrite(S_LED_2, LOW);   delay(100);   digitalWrite(S_LED_2, HIGH);
+  digitalWrite(S_LED_3, LOW);   delay(100);   digitalWrite(S_LED_3, HIGH);
+  digitalWrite(S_LED_4, LOW);   delay(100);   digitalWrite(S_LED_4, HIGH);
+
+  //DZB
+  digitalWrite(DZB, HIGH);
+  shift(&PORTC, 8, 100);
+  PORTC = B00000000;
+  shift(&PORTD, 7, 100);
+  PORTD = B00000000;
+  digitalWrite(DZB, LOW);
+
+  //SEG
+  digitalWrite(SEG, HIGH);
+  shift(&PORTC, 8, 100);
+  PORTC = B00000000;
+  shift(&PORTD, 8, 100);
+  PORTD = B00000000;
+  digitalWrite(SEG, LOW);
+}
+
+//Port durchshiften
+void shift(volatile uint8_t *port, int j, int ms)
+{
+  for (int i = 0; i < j; i++)
+  {
+    *port = 1 << i;
+    delay(ms);
+  }
+}
 
 void led(unsigned long currentMillis, byte dzb_c, byte dzb_d, byte seg_c, byte seg_d)
 {
