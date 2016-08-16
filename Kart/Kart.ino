@@ -113,27 +113,49 @@ void init_IO()
 //Startbild
 void start()
 {
-  //Status-LEDs
-  digitalWrite(S_LED_1, LOW);   delay(100);   digitalWrite(S_LED_1, HIGH);
-  digitalWrite(S_LED_2, LOW);   delay(100);   digitalWrite(S_LED_2, HIGH);
-  digitalWrite(S_LED_3, LOW);   delay(100);   digitalWrite(S_LED_3, HIGH);
-  digitalWrite(S_LED_4, LOW);   delay(100);   digitalWrite(S_LED_4, HIGH);
+  { //Status
+    //Status-LEDs
+    digitalWrite(S_LED_1, LOW);   delay(100);   digitalWrite(S_LED_1, HIGH);
+    digitalWrite(S_LED_2, LOW);   delay(100);   digitalWrite(S_LED_2, HIGH);
+    digitalWrite(S_LED_3, LOW);   delay(100);   digitalWrite(S_LED_3, HIGH);
+    digitalWrite(S_LED_4, LOW);   delay(100);   digitalWrite(S_LED_4, HIGH);
 
-  //DZB
-  digitalWrite(DZB, HIGH);
-  shift(&PORTC, 8, 100);
-  PORTC = B00000000;
-  shift(&PORTD, 7, 100);
-  PORTD = B00000000;
-  digitalWrite(DZB, LOW);
+    //DZB
+    digitalWrite(DZB, HIGH);
+    shift(&PORTC, 8, 100);
+    PORTC = B00000000;
+    shift(&PORTD, 7, 100);
+    PORTD = B00000000;
+    digitalWrite(DZB, LOW);
 
-  //SEG
-  digitalWrite(SEG, HIGH);
-  shift(&PORTC, 8, 100);
-  PORTC = B00000000;
-  shift(&PORTD, 8, 100);
-  PORTD = B00000000;
-  digitalWrite(SEG, LOW);
+    //SEG
+    digitalWrite(SEG, HIGH);
+    shift(&PORTC, 8, 100);
+    PORTC = B00000000;
+    shift(&PORTD, 8, 100);
+    PORTD = B00000000;
+    digitalWrite(SEG, LOW);
+  }
+  { //Drehzahl
+    digitalWrite(DZB, HIGH);
+    { //auffuellen
+      for (int i = 0; i < 16; i++)
+      {
+        PORTC = lowByte(drehzahl[i]);
+        PORTD = highByte(drehzahl[i]);
+        delay(100);
+      }
+    }
+    { //warnung
+      PORTC = lowByte(warnung[0]);
+      PORTD = highByte(warnung[0]);
+      delay(100);
+      PORTC = lowByte(warnung[1]);
+      PORTD = highByte(warnung[1]);
+      delay(100);
+    }
+    digitalWrite(DZB, LOW);
+  }
 }
 
 //Port durchshiften
