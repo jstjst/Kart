@@ -166,6 +166,31 @@ void start()
     }
     digitalWrite(DZB, LOW);
   }
+  { //Gaenge
+    digitalWrite(SEG, HIGH);
+    { //alle
+      PORTC = 0b11111111;
+      PORTD = 0b11111111;
+      delay(1000);
+    }
+    { //Zeichen
+      PORTC = lowByte(d);   PORTD = highByte(d);
+      PORTC = lowByte(n);   PORTD = highByte(n);
+      PORTC = lowByte(r);   PORTD = highByte(r);
+      PORTC = lowByte(p);   PORTD = highByte(p);
+      for (int i = 0; i < 5; i++)
+      {
+        PORTC = lowByte(gang[i]);
+        PORTD = highByte(gang[i]);
+        delay(100);
+      }
+    }
+    { //aus
+      PORTC = 0b00000000;
+      PORTD = 0b00000000;
+    }
+    digitalWrite(SEG, LOW);
+  }
 }
 
 //Port durchshiften
