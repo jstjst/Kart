@@ -151,6 +151,19 @@ void start()
       PORTD = ~highByte(warnung);
       delay(100);
     }
+    { //leeren
+      PORTC = 0b11111111;
+      for (int i = 0; i < 7; i++)
+      {
+        PORTD = 0b01111111 >> i;
+        delay(100);
+      }
+      for (int i = 0; i < 8; i++)
+      {
+        PORTC = 0b11111111 >> i;
+        delay(100);
+      }
+    }
     digitalWrite(DZB, LOW);
   }
 }
