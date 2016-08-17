@@ -4,10 +4,20 @@
 ////////////////
 
 //Einstellungen
-//Zeit fuer Wechsel Warnung (ms)
-#define warnung_delay 100
 //LED Multiplexing Umschaltzeit (ms)
 #define updateInterval 10
+
+//Zeiten(ms)
+//Startbild
+#define T_SB_STATUS   100
+#define T_SB_FUELLEN  100
+#define T_SB_WARNUNG  100
+#define T_SB_LEEREN   100
+#define T_SB_ALLE     100
+#define T_SB_ZEICHEN  100
+#define T_SB_START    100
+
+
 
 #define NSL PB0   //Ausgang fuer Nebelschlussleuchte
 #define DZB PB1   //Ausgang fuer Drehzahlband
@@ -112,25 +122,21 @@ void start()
 {
   { //Status
     //Status-LEDs
-    digitalWrite(S_LED_1, LOW);   delay(100);   digitalWrite(S_LED_1, HIGH);
-    digitalWrite(S_LED_2, LOW);   delay(100);   digitalWrite(S_LED_2, HIGH);
-    digitalWrite(S_LED_3, LOW);   delay(100);   digitalWrite(S_LED_3, HIGH);
-    digitalWrite(S_LED_4, LOW);   delay(100);   digitalWrite(S_LED_4, HIGH);
+    digitalWrite(S_LED_1, LOW);   delay(T_SB_STATUS);   digitalWrite(S_LED_1, HIGH);
+    digitalWrite(S_LED_2, LOW);   delay(T_SB_STATUS);   digitalWrite(S_LED_2, HIGH);
+    digitalWrite(S_LED_3, LOW);   delay(T_SB_STATUS);   digitalWrite(S_LED_3, HIGH);
+    digitalWrite(S_LED_4, LOW);   delay(T_SB_STATUS);   digitalWrite(S_LED_4, HIGH);
 
     //DZB
     digitalWrite(DZB, HIGH);
-    shift(&PORTC, 8, 100);
-    PORTC = B00000000;
-    shift(&PORTD, 7, 100);
-    PORTD = B00000000;
+    shift_left(&PORTC, 1, 8, T_SB_STATUS);
+    shift_left(&PORTD, 1, 7, T_SB_STATUS);
     digitalWrite(DZB, LOW);
 
     //SEG
     digitalWrite(SEG, HIGH);
-    shift(&PORTC, 8, 100);
-    PORTC = B00000000;
-    shift(&PORTD, 8, 100);
-    PORTD = B00000000;
+    shift_left(&PORTC, 1, 8, T_SB_STATUS);
+    shift_left(&PORTD, 1, 8, T_SB_STATUS);
     digitalWrite(SEG, LOW);
   }
   { //Drehzahl
@@ -140,29 +146,21 @@ void start()
       {
         PORTC = lowByte(drehzahl[i]);
         PORTD = highByte(drehzahl[i]);
-        delay(100);
+        delay(T_SB_FUELLEN);
       }
     }
     { //warnung
       PORTC = lowByte(warnung);
       PORTD = highByte(warnung);
-      delay(100);
+      delay(T_SB_WARNUNG);
       PORTC = ~lowByte(warnung);
       PORTD = ~highByte(warnung);
-      delay(100);
+      delay(T_SB_WARNUNG);
     }
     { //leeren
       PORTC = 0b11111111;
-      for (int i = 0; i < 7; i++)
-      {
-        PORTD = 0b01111111 >> i;
-        delay(100);
-      }
-      for (int i = 0; i < 8; i++)
-      {
-        PORTC = 0b11111111 >> i;
-        delay(100);
-      }
+      shift_right(&PORTD, 0b01111111, 7, T_SB_LEEREN);
+      shift_right(&PORTC, 0b11111111, 8, T_SB_LEEREN);
     }
     digitalWrite(DZB, LOW);
   }
@@ -171,18 +169,18 @@ void start()
     { //alle
       PORTC = 0b11111111;
       PORTD = 0b11111111;
-      delay(1000);
+      delay(T_SB_ALLE);
     }
     { //Zeichen
-      PORTC = lowByte(d);   PORTD = highByte(d);
-      PORTC = lowByte(n);   PORTD = highByte(n);
-      PORTC = lowByte(r);   PORTD = highByte(r);
-      PORTC = lowByte(p);   PORTD = highByte(p);
+      PORTC = lowByte(d);   PORTD = highByte(d);    delay(T_SB_ZEICHEN);
+      PORTC = lowByte(n);   PORTD = highByte(n);    delay(T_SB_ZEICHEN);
+      PORTC = lowByte(r);   PORTD = highByte(r);    delay(T_SB_ZEICHEN);
+      PORTC = lowByte(p);   PORTD = highByte(p);    delay(T_SB_ZEICHEN);
       for (int i = 0; i < 5; i++)
       {
         PORTC = lowByte(gang[i]);
         PORTD = highByte(gang[i]);
-        delay(100);
+        delay(T_SB_ZEICHEN);
       }
     }
     { //aus
@@ -191,17 +189,28 @@ void start()
     }
     digitalWrite(SEG, LOW);
   }
-  delay(100);   //alles aus
+  delay(T_SB_START);   //alles aus
 }
 
 //Port durchshiften
-void shift(volatile uint8_t *port, int j, int ms)
+void shift_left(volatile uint8_t *port, uint8_t mask, int j, int ms)
 {
   for (int i = 0; i < j; i++)
   {
-    *port = 1 << i;
+    *port = mask << i;
     delay(ms);
   }
+  *port = 0b00000000;
+}
+
+void shift_right(volatile uint8_t *port, uint8_t mask, int j, int ms)
+{
+  for (int i = 0; i < j; i++)
+  {
+    *port = mask << i;
+    delay(ms);
+  }
+  *port = 0b00000000;
 }
 
 void led(unsigned long currentMillis, word dzb, word seg)
