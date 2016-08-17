@@ -40,10 +40,7 @@ const word drehzahl[16] = {
 };
 
 //Warnung
-const word warnung[2] = {
-  0b0101010101010101,
-  0b0010101010101010
-};
+const word warnung = 0b0101010101010101;
 
 //D,N,R,P        FGTSUHKMABNCPRDE
 const byte d = 0b1001000111010011;
@@ -147,11 +144,11 @@ void start()
       }
     }
     { //warnung
-      PORTC = lowByte(warnung[0]);
-      PORTD = highByte(warnung[0]);
+      PORTC = lowByte(warnung);
+      PORTD = highByte(warnung);
       delay(100);
-      PORTC = lowByte(warnung[1]);
-      PORTD = highByte(warnung[1]);
+      PORTC = ~lowByte(warnung);
+      PORTD = ~highByte(warnung);
       delay(100);
     }
     digitalWrite(DZB, LOW);
