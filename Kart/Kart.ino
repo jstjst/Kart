@@ -191,6 +191,7 @@ void start()
     }
     digitalWrite(SEG, LOW);
   }
+  delay(100);   //alles aus
 }
 
 //Port durchshiften
