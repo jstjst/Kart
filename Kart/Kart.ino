@@ -29,6 +29,14 @@
 #define S_LED_3 PB6
 #define S_LED_4 PB7
 
+//Gaenge
+#define DN PA4    //D/N
+#define NR PA5    //N/R
+
+//Bremsen
+#define B PA7     //Bremse
+#define HB PA6    //Handbremse
+
 //Drehzahlanzeige
 const word drehzahl[16] = {
   0b0000000000000000,
@@ -52,14 +60,18 @@ const word drehzahl[16] = {
 //Warnung
 const word warnung = 0b0101010101010101;
 
-//D,N,R,P        FGTSUHKMABNCPRDE
-const byte d = 0b1001000111010011;
-const byte n = 0b0100011000010110;
-const byte r = 0b0100110011011100;
-const byte p = 0b0100110011011000;
+//Segment Zeichen
+const byte gang_let_seg[5] = {
+  //FGTSUHKMABNCPRDE
+  0b1001000111010011,   //D
+  0b0100011000010110,   //N
+  0b0100110011011100,   //R
+  0b0100110011011000,   //P
+  0b0110010000010110    //W
+};
 
-//Gang
-const word gang[5] = {
+//Segmnet Zahlen
+const word gang_seg[5] = {
   //FGTSUHKMABNCPRDE
   0b0000000000110010,   //1
   0b1100100011011001,   //2
@@ -84,6 +96,7 @@ void setup()
 SIGNAL(TIMER0_COMPA_vect)
 {
   unsigned long currentMillis = millis();
+  int seg = gang(digitalRead(DN), digitalRead(NR), digitalRead(HB));
   led(currentMillis, , );   //LED Multiplexing
 }
 
@@ -115,6 +128,14 @@ void init_IO()
   digitalWrite(S_LED_2, HIGH);
   digitalWrite(S_LED_3, HIGH);
   digitalWrite(S_LED_4, HIGH);
+
+  //Gaenge
+  pinMode(DN, INPUT);
+  pinMode(NR, INPUT);
+
+  //Bremsen
+  pinMode(B, INPUT);
+  pinMode(HB, INPUT);
 }
 
 //Startbild
@@ -172,14 +193,17 @@ void start()
       delay(T_SB_ALLE);
     }
     { //Zeichen
-      PORTC = lowByte(d);   PORTD = highByte(d);    delay(T_SB_ZEICHEN);
-      PORTC = lowByte(n);   PORTD = highByte(n);    delay(T_SB_ZEICHEN);
-      PORTC = lowByte(r);   PORTD = highByte(r);    delay(T_SB_ZEICHEN);
-      PORTC = lowByte(p);   PORTD = highByte(p);    delay(T_SB_ZEICHEN);
       for (int i = 0; i < 5; i++)
       {
-        PORTC = lowByte(gang[i]);
-        PORTD = highByte(gang[i]);
+        PORTC = lowByte(gang_let_seg[i]);
+        PORTD = highByte(gang_let_seg[i]);
+        delay(T_SB_ZEICHEN);
+      }
+
+      for (int i = 0; i < 5; i++)
+      {
+        PORTC = lowByte(gang_seg[i]);
+        PORTD = highByte(gang_seg[i]);
         delay(T_SB_ZEICHEN);
       }
     }
@@ -192,27 +216,29 @@ void start()
   delay(T_SB_START);   //alles aus
 }
 
-void gang(D/N, N/R, HB)
+int gang(bool dn, bool nr, bool hb)
 {
-  if(D/N == 1)
+  //return: D=0 N=1 R=2 P=3 W=4
+
+  if (dn == 0 && nr == 1 && hb == 1)
   {
-    gang D
+    return 0;
   }
-  else if(D/N == 1 && N/R == 1)
+  else if (dn == 1 && nr == 0 && hb == 1)
   {
-    gang N
+    return 2;
   }
-  else if(N/R == 1)
+  else if (dn == 0 && nr == 0 && hb == 1)
   {
-    gang R
+    return 1;
   }
-  else if(HB == 1 || (D/N == 1 && N/R == 1 && HB == 1))
+  else if ((dn == 1 && nr == 1 && hb == 0) || (dn == 0 && nr == 0 && hb == 0))
   {
-    gang P
+    return 3;
   }
-  else if((N/R == 1 && HB == 1) || (D/N == 1 && HB == 1))
+  else if ((dn == 1 && nr == 0 && hb == 0) || (dn == 0 && nr == 1 && hb == 0))
   {
-    warnung
+    return 4;
   }
 }
 
