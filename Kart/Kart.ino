@@ -192,6 +192,30 @@ void start()
   delay(T_SB_START);   //alles aus
 }
 
+void gang(D/N, N/R, HB)
+{
+  if(D/N == 1)
+  {
+    gang D
+  }
+  else if(D/N == 1 && N/R == 1)
+  {
+    gang N
+  }
+  else if(N/R == 1)
+  {
+    gang R
+  }
+  else if(HB == 1 || (D/N == 1 && N/R == 1 && HB == 1))
+  {
+    gang P
+  }
+  else if((N/R == 1 && HB == 1) || (D/N == 1 && HB == 1))
+  {
+    warnung
+  }
+}
+
 //Port durchshiften
 void shift_left(volatile uint8_t *port, uint8_t mask, int j, int ms)
 {
