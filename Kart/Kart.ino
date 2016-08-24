@@ -96,8 +96,8 @@ void setup()
 SIGNAL(TIMER0_COMPA_vect)
 {
   unsigned long currentMillis = millis();
-  int seg = gang(digitalRead(DN), digitalRead(NR), digitalRead(HB));
-  led(currentMillis, , );   //LED Multiplexing
+  //int seg = gang(digitalRead(DN), digitalRead(NR), digitalRead(HB));
+  //led(currentMillis, , );   //LED Multiplexing
 }
 
 //Initialisierung Ein-/Ausgaenge
